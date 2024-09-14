@@ -1,0 +1,60 @@
+version: '3.7'
+
+services:
+
+  akaunting:
+    container_name: akaunting
+    image: docker.io/akaunting/akaunting:latest
+    build:
+      context: .
+    ports:
+      - 8080:80
+    volumes:
+      - akaunting-data:/var/www/html
+    restart: unless-stopped
+    environment:
+      - AKAUNTING_SETUP
+      # You should change this to match your reverse proxy protocol, DNS name and port (if non standard port is used)
+      - 'APP_URL=${APP_URL}'
+      - 'LOCALE=${LOCALE}'
+
+      # Don't change this unless you rename your database container or use rootless podman, in case of using rootless podman you should set it to 127.0.0.1 (NOT localhost)
+      - 'DB_HOST=${DB_HOST}'
+      - 'DB_PORT=${DB_PORT}'
+
+      # Change these to match env/db.env
+      - 'DB_NAME=${DB_NAME}'
+      - 'DB_USERNAME=${DB_USERNAME}'
+      - 'DB_PASSWORD=${DB_PASSWORD}'
+
+      # You should change this to a random string of three numbers or letters followed by an underscore
+      - 'DB_PREFIX=${DB_PREFIX}'
+
+      # These define the first company to exist on this instance. They are only used during setup.
+      - 'COMPANY_NAME=${COMPANY_NAME}'
+      - 'COMPANY_EMAIL=${COMPANY_EMAIL}'
+
+      # This will be the first administrative user created on setup.
+      - 'ADMIN_EMAIL=${ADMIN_EMAIL}'
+      - 'ADMIN_PASSWORD=${ADMIN_PASSWORD}'
+    depends_on:
+      - akaunting-db
+
+  akaunting-db:
+    container_name: akaunting-db
+    image: mariadb
+    volumes:
+      - akaunting-db:/var/lib/mysql
+    restart: unless-stopped
+    environment:
+      # These could be changed
+      - 'MYSQL_DATABASE=${MYSQL_DATABASE}'
+      - 'MYSQL_USER=${MYSQL_USER}'
+      # This should definitely be changed to something long and random
+      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'
+      # You should probably leave this
+      - 'MYSQL_RANDOM_ROOT_PASSWORD=${MYSQL_RANDOM_ROOT_PASSWORD}'
+
+volumes:
+  akaunting-data:
+  akaunting-db:
